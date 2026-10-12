@@ -5,19 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#EDF0F2" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0E151B" media="(prefers-color-scheme: dark)">
-<style>
-:root { color-scheme: light; padding-top: env(safe-area-inset-top, 0px); }
-body { margin: 0; }
-[hidden] { display: none !important; }
-</style>
 <title>Lecture en mesure</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;0,6..96,700;1,6..96,500&family=Instrument+Sans:wght@400;500;600&display=swap">
 <style>
-/* Layout: one column. Exercise sheet on top, metronome dock fixed at the bottom.
+/* Layout: one screen. Title and levels on top, the staff fills the middle,
+   compact controls below, metronome dock at the bottom.
    Palette: cool print paper, deep ink, one brass accent (the saxophone). */
 :root {
+  color-scheme: light;
+  padding-top: env(safe-area-inset-top, 0px);
   --bg: #EDF0F2;
   --surface: #F8F9FA;
   --ink: #16212B;
@@ -44,46 +42,52 @@ body { margin: 0; }
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { height: 100%; }
 body {
+  margin: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
   background: var(--bg);
   color: var(--ink);
-  font: 400 15px/1.45 var(--font-body);
-  padding-inline: 16px;
-  padding-block: 22px 220px;
+  font: 400 15px/1.4 var(--font-body);
 }
 button, select, input { font: inherit; color: inherit; }
 button { touch-action: manipulation; }
 :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 
-.wrap { max-width: 880px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px; }
+.app {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 8px 12px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 
+/* Title + levels */
+.top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; min-width: 0; }
 h1 {
   margin: 0;
-  font: 700 clamp(1.8rem, 6vw, 2.5rem)/1.05 var(--font-display);
+  font: 700 1.25rem/1.1 var(--font-display);
   letter-spacing: -0.01em;
-  text-wrap: balance;
+  white-space: nowrap;
 }
-.sub { margin: 8px 0 0; color: var(--ink-2); max-width: 58ch; }
-h2 {
-  margin: 0;
-  font: 600 0.72rem/1 var(--font-body);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--ink-2);
-}
-
-/* Levels */
-.lvl-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin-bottom: 10px; }
-.lvl-head p { margin: 0; color: var(--ink); min-width: 0; font-weight: 500; }
-.levels { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.lvl-line { margin: 0; color: var(--ink-2); font-size: 0.85rem; font-weight: 500; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lvl-desc { margin: 0; color: var(--ink-2); font-size: 0.85rem; display: none; }
+.levels { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
 .lv {
   appearance: none;
   border: 1px solid var(--line);
   background: var(--surface);
   border-radius: 6px;
-  min-height: 48px;
+  height: 38px;
   padding: 0;
-  font: 500 1.4rem/1 var(--font-display);
+  font: 500 1.15rem/1 var(--font-display);
   cursor: pointer;
 }
 .lv:hover { border-color: var(--ink-2); }
@@ -91,138 +95,130 @@ h2 {
 
 /* Sheet */
 .sheet {
+  flex: 1;
+  min-height: 0;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 8px;
-  padding: 14px 14px 14px;
+  padding: 6px 8px 8px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
 }
-.meta { margin: 0; color: var(--ink-2); font-size: 0.85rem; letter-spacing: 0.02em; }
-.staff { color: var(--ink); min-width: 0; }
-.staff svg { display: block; width: 100%; height: auto; }
+.staff { flex: 1; min-height: 0; position: relative; overflow: hidden; color: var(--ink); }
+.staff svg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; }
 .staff [fill="black"] { fill: currentColor; }
 .staff [stroke="black"] { stroke: currentColor; }
-.staff .nn { font: 600 12px var(--font-body); fill: var(--ink-2); stroke: none; }
+.staff .nn { font-family: var(--font-body); font-weight: 600; fill: var(--ink-2); stroke: none; }
 .err { color: var(--ink-2); padding: 24px 0; }
-.sheet-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; }
+
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
 .btn {
   appearance: none;
   background: transparent;
   border: 1px solid var(--ink);
   border-radius: 6px;
-  padding: 10px 16px;
+  padding: 7px 12px;
+  font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
 }
 .btn:hover { background: var(--ink); color: var(--bg); }
-.switch { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+.switch { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.9rem; }
 .switch input { width: 18px; height: 18px; accent-color: var(--accent-ink); margin: 0; }
-.hint { margin: 0; color: var(--ink-2); font-size: 0.82rem; }
+.grp { display: inline-flex; align-items: center; gap: 6px; }
+.lab { color: var(--ink-2); font-size: 0.78rem; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.seg button { appearance: none; border: 0; background: transparent; min-width: 36px; height: 32px; padding: 0 10px; font-size: 0.9rem; font-weight: 500; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.seg button:disabled { opacity: 0.35; cursor: default; }
 
 /* Metronome dock */
 .dock {
-  position: fixed;
-  left: 0; right: 0; bottom: 0;
-  z-index: 10;
+  flex: none;
   background: var(--surface);
   border-top: 1px solid var(--line);
-  padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+  padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px));
 }
 .dock-in {
-  max-width: 880px;
+  max-width: 1100px;
   margin: 0 auto;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  gap: 8px 16px;
+  gap: 4px 12px;
   align-items: center;
 }
 .play {
   grid-row: span 2;
   appearance: none;
-  width: 80px; height: 80px;
+  width: 60px; height: 60px;
   border-radius: 50%;
   border: 0;
   background: var(--accent);
   color: var(--on-accent);
   display: grid; place-items: center;
   cursor: pointer;
+  transition: box-shadow 0.08s;
 }
-.play svg { width: 32px; height: 32px; }
+.play svg { width: 26px; height: 26px; }
 .play .i-stop { display: none; }
 .play[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
 .play[aria-pressed="true"] .i-play { display: none; }
 .play[aria-pressed="true"] .i-stop { display: inline; }
+.play.beat { box-shadow: 0 0 0 5px var(--accent); }
 
-.tempo { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
+.tempo { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .step {
   appearance: none;
-  width: 46px; height: 46px;
+  width: 38px; height: 38px;
   flex: none;
   border: 1px solid var(--line);
   border-radius: 6px;
   background: transparent;
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   line-height: 1;
   cursor: pointer;
   user-select: none;
 }
 .step:hover { border-color: var(--ink); }
-.bpm { text-align: center; min-width: 0; }
+.bpm { flex: 1; display: flex; align-items: baseline; justify-content: center; gap: 6px; min-width: 0; }
 .bpm output {
-  display: block;
-  font: 700 2.7rem/1 var(--font-display);
+  font: 700 1.9rem/1 var(--font-display);
   font-variant-numeric: tabular-nums lining-nums;
   min-width: 3ch;
+  text-align: right;
 }
-.bpm .unit { color: var(--ink-2); font-size: 0.78rem; }
-.mark { font: italic 500 1.05rem/1 var(--font-display); color: var(--accent-ink); }
-
-.range-row { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.range-row input[type="range"] { flex: 1; min-width: 0; accent-color: var(--accent-ink); height: 28px; }
-
-.dock-row {
-  grid-column: 1 / -1;
-  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
-  gap: 8px 14px;
-}
-.beats { display: flex; align-items: center; gap: 8px; min-height: 18px; }
-.beats i {
-  display: block; width: 11px; height: 11px; border-radius: 50%;
-  border: 1.5px solid var(--ink-2);
-}
-.beats i:first-child { width: 16px; height: 16px; }
-.beats i.on { background: var(--accent-ink); border-color: var(--accent-ink); }
-.dock-tools { display: flex; align-items: center; gap: 10px; }
+.bpm .unit { color: var(--ink-2); font-size: 0.75rem; }
 .chip {
   appearance: none;
+  flex: none;
   background: transparent;
   border: 1px solid var(--line);
   border-radius: 6px;
-  padding: 8px 14px;
+  height: 38px;
+  padding: 0 12px;
+  font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
 }
 .chip:hover { border-color: var(--ink); }
 .chip:active { background: var(--ink); color: var(--bg); }
-.sel { display: inline-flex; align-items: center; gap: 8px; color: var(--ink-2); font-size: 0.85rem; }
-.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
-.seg button { appearance: none; border: 0; background: transparent; min-width: 44px; padding: 8px 14px; font-weight: 500; cursor: pointer; }
-.seg button + button { border-left: 1px solid var(--line); }
-.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
-.sel select {
-  background: var(--surface);
-  color: var(--ink);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 7px 8px;
-}
 
-@media (max-width: 420px) {
-  .play { width: 68px; height: 68px; }
-  .bpm output { font-size: 2.3rem; }
-  .step { width: 42px; height: 42px; }
+.range-row { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.range-row input[type="range"] { flex: 1; min-width: 0; accent-color: var(--accent-ink); height: 24px; margin: 0; }
+.mark { font: italic 500 1rem/1 var(--font-display); color: var(--accent-ink); min-width: 5.5em; text-align: right; }
+
+@media (min-width: 700px) {
+  .app { padding: 12px 20px 12px; gap: 10px; }
+  .lvl-desc { display: block; }
+  .lv { height: 42px; }
+  h1 { font-size: 1.6rem; }
+  .dock { padding-inline: 20px; }
+}
+@media (max-width: 380px) {
+  .unit { display: none; }
+  .play { width: 54px; height: 54px; }
 }
 @media (prefers-reduced-motion: no-preference) {
   .lv, .btn, .chip, .step { transition: background-color 0.12s, color 0.12s, border-color 0.12s; }
@@ -230,33 +226,32 @@ h2 {
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
+<div class="app">
+  <header class="top">
     <h1>Lecture en mesure</h1>
-    <p class="sub">Lecture de notes en clé de sol selon la progression de la méthode Dandelot : on part de quatre points de repère, puis on élargit note après note. Lance le métronome et lis à pulsation régulière.</p>
+    <p id="lvlLine" class="lvl-line"></p>
   </header>
 
-  <section aria-labelledby="lvlH">
-    <div class="lvl-head">
-      <h2 id="lvlH">Niveau</h2>
-      <p id="lvlDesc"></p>
-    </div>
-    <div id="levels" class="levels" role="group" aria-labelledby="lvlH"></div>
-  </section>
+  <div id="levels" class="levels" role="group" aria-label="Niveau"></div>
+  <p id="lvlDesc" class="lvl-desc"></p>
 
   <section class="sheet" aria-label="Exercice">
-    <p id="meta" class="meta"></p>
     <div id="staff" class="staff"></div>
-    <div class="sheet-actions">
+    <div class="controls">
       <button id="newBtn" class="btn" type="button">Nouvel exercice</button>
-      <label class="switch" for="namesToggle"><input id="namesToggle" type="checkbox"> Afficher les noms des notes</label>
+      <label class="switch" for="namesToggle"><input id="namesToggle" type="checkbox"> Noms</label>
+      <div class="grp">
+        <span id="npbLabel" class="lab">Par temps</span>
+        <div id="npb" class="seg" role="group" aria-labelledby="npbLabel"></div>
+      </div>
+      <div class="grp">
+        <span id="sizeLabel" class="lab">Taille</span>
+        <div class="seg" role="group" aria-labelledby="sizeLabel">
+          <button id="smaller" type="button" aria-label="Notes plus petites, plus de notes">A−</button>
+          <button id="bigger" type="button" aria-label="Notes plus grandes">A+</button>
+        </div>
+      </div>
     </div>
-    <div class="sheet-actions">
-      <span id="npbLabel" class="sel">Notes par temps</span>
-      <div id="npb" class="seg" role="group" aria-labelledby="npbLabel"></div>
-      <span id="npbCap" class="hint"></span>
-    </div>
-    <p class="hint">Lis à vitesse régulière, d'abord lentement puis de plus en plus vite, sans arrêter. Raccourcis : Espace lance ou arrête le métronome, N change d'exercice, ↑ ↓ règlent le tempo.</p>
   </section>
 </div>
 
@@ -276,18 +271,12 @@ h2 {
         <span class="unit">♩ par minute</span>
       </div>
       <button id="plus" class="step" type="button" aria-label="Accélérer">+</button>
+      <button id="tap" class="chip" type="button">Tap</button>
     </div>
 
     <div class="range-row">
       <input id="bpmRange" type="range" min="30" max="220" step="1" value="80" aria-label="Tempo en battements par minute">
       <span id="mark" class="mark">Andante</span>
-    </div>
-
-    <div class="dock-row">
-      <div id="beats" class="beats" aria-hidden="true"><i></i></div>
-      <div class="dock-tools">
-        <button id="tap" class="chip" type="button">Tap</button>
-      </div>
     </div>
   </div>
 </div>
@@ -328,7 +317,8 @@ h2 {
     { n: 3, cap: 'triolets de croches' },
     { n: 4, cap: 'doubles-croches' }
   ];
-  var COUNTS = { 1: 24, 2: 32, 3: 36, 4: 32 };
+  var SCALES = [0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.15, 1.3];
+  var STREAM = 600;   /* notes générées d'avance ; l'écran en affiche autant qu'il peut */
 
   function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
   function weight(prev, cand, L, same) {
@@ -338,8 +328,8 @@ h2 {
     if (L.ledger && (cand >= 40 || cand <= 28)) w *= 2;
     return w;
   }
-  function generate(li, npb) {
-    var L = LEVELS[li], pool = L.pool, n = COUNTS[npb], notes = [], same = 0, prev = null, i, k;
+  function generate(li, npb, count) {
+    var L = LEVELS[li], pool = L.pool, n = count || STREAM, notes = [], same = 0, prev = null, i, k;
     for (i = 0; i < n; i++) {
       var d;
       if (prev === null) {
@@ -359,23 +349,25 @@ h2 {
   }
 
   /* ---------- État ---------- */
-  var state = { bpm: 80, level: 0, npb: 1, names: false };
+  var state = { bpm: 80, level: 0, npb: 1, names: false, scale: 0.7 };
   try {
-    var saved = JSON.parse(localStorage.getItem('lecture-en-mesure-v2') || '{}');
+    var saved = JSON.parse(localStorage.getItem('lecture-en-mesure-v3') || '{}');
     if (saved.bpm) state.bpm = clamp(Math.round(+saved.bpm) || 80, 30, 220);
     if (typeof saved.level === 'number' && saved.level >= 0 && saved.level < LEVELS.length) state.level = saved.level;
     if (saved.npb >= 1 && saved.npb <= 4) state.npb = Math.round(saved.npb);
+    if (SCALES.indexOf(saved.scale) !== -1) state.scale = saved.scale;
     state.names = !!saved.names;
   } catch (e) {}
-  function save() { try { localStorage.setItem('lecture-en-mesure-v2', JSON.stringify(state)); } catch (e) {} }
+  function save() { try { localStorage.setItem('lecture-en-mesure-v3', JSON.stringify(state)); } catch (e) {} }
 
   var $ = function (id) { return document.getElementById(id); };
-  var staffEl = $('staff'), metaEl = $('meta'), levelsEl = $('levels'), lvlDesc = $('lvlDesc');
+  var staffEl = $('staff'), levelsEl = $('levels'), lvlLine = $('lvlLine'), lvlDesc = $('lvlDesc');
   var ex = null;
 
   /* ---------- Notation ---------- */
   var NS = 'http://www.w3.org/2000/svg';
-  var ROW_H = 150;
+  var ROW_PLAIN = 112, ROW_NAMES = 136, CLEF_W = 46, PAD = 4;
+  var NOTE_W = { 1: 34, 2: 29, 3: 28, 4: 22 };
 
   function drawExercise() {
     staffEl.innerHTML = '';
@@ -385,33 +377,34 @@ h2 {
       return;
     }
     var VF = window.Vex.Flow;
-    var npb = ex.npb;
-    var W = Math.max(280, Math.floor(staffEl.clientWidth));
-    var wide = W >= 620;
-    var beatsPerRow = npb === 1 ? (wide ? 12 : 8) : npb === 2 ? (wide ? 8 : 4) : npb === 3 ? (wide ? 5 : 3) : (wide ? 4 : 2);
-    var rowLen = beatsPerRow * npb;
-    var rows = [];
-    for (var i = 0; i < ex.notes.length; i += rowLen) rows.push(ex.notes.slice(i, i + rowLen));
+    var npb = ex.npb, s = state.scale;
+    var W = staffEl.clientWidth || 360, Hav = staffEl.clientHeight || 420;
+    var Wn = W / s, Hn = Hav / s;
+    var rh0 = state.names ? ROW_NAMES : ROW_PLAIN;
+    var rows = Math.max(1, Math.floor(Hn / rh0));
+    var RH = Hn / rows;
+    var per = Math.floor((Wn - 2 * PAD - CLEF_W) / NOTE_W[npb]);
+    per = Math.max(npb, per - per % npb);
+    var total = Math.min(rows * per, ex.notes.length);
 
-    var H = rows.length * ROW_H + 6;
     var renderer = new VF.Renderer(staffEl, VF.Renderer.Backends.SVG);
-    renderer.resize(W, H);
+    renderer.resize(Wn, Hn);
     var ctx = renderer.getContext();
     ctx.setFillStyle('currentColor');
     ctx.setStrokeStyle('currentColor');
     var svg = staffEl.querySelector('svg');
-    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    svg.setAttribute('viewBox', '0 0 ' + Wn + ' ' + Hn);
     svg.setAttribute('role', 'img');
     svg.setAttribute('aria-label', 'Exercice de lecture de notes en clé de sol');
+    var nameSize = clamp(11 / s, 12, 20);
 
-    var pad = 4, clefW = 46;
-    rows.forEach(function (row, ri) {
-      var y = ri * ROW_H;
-      var inner = W - 2 * pad - clefW;
-      var w = clefW + inner * (row.length / rowLen);
-      var stave = new VF.Stave(pad, y, w);
+    for (var ri = 0; ri < rows; ri++) {
+      var row = ex.notes.slice(ri * per, Math.min((ri + 1) * per, total));
+      if (!row.length) break;
+      var y = ri * RH + (RH - rh0) / 2;
+      var stave = new VF.Stave(PAD, y, Wn - 2 * PAD);
       stave.addClef('treble');
-      if (ri === rows.length - 1) stave.setEndBarType(VF.Barline.type.END);
+      if (ri === rows - 1 || (ri + 1) * per >= total) stave.setEndBarType(VF.Barline.type.END);
       stave.setContext(ctx).draw();
 
       var notes = row.map(function (n) {
@@ -441,30 +434,30 @@ h2 {
           try { cx = (sn.getNoteHeadBeginX() + sn.getNoteHeadEndX()) / 2; } catch (e) { cx = sn.getAbsoluteX() + 6; }
           var t = document.createElementNS(NS, 'text');
           t.setAttribute('x', cx);
-          t.setAttribute('y', y + 134);
+          t.setAttribute('y', y + 128);
           t.setAttribute('text-anchor', 'middle');
           t.setAttribute('class', 'nn');
+          t.setAttribute('font-size', nameSize);
           t.textContent = row[k].name;
           svg.appendChild(t);
         });
       }
-    });
+    }
   }
 
   function newExercise() {
     ex = generate(state.level, state.npb);
-    var L = LEVELS[state.level];
-    metaEl.textContent = 'Niveau ' + (state.level + 1) + ' · ' + L.name + ' · ' + ex.notes.length + ' notes';
     drawExercise();
   }
 
-  /* ---------- Niveaux et vitesse ---------- */
+  /* ---------- Niveaux, vitesse, taille ---------- */
   function renderLevels() {
     Array.prototype.forEach.call(levelsEl.children, function (b, i) {
       b.setAttribute('aria-pressed', i === state.level ? 'true' : 'false');
     });
     var L = LEVELS[state.level];
-    lvlDesc.textContent = (state.level + 1) + ' · ' + L.name + ' (' + L.ex + ') : ' + L.desc;
+    lvlLine.textContent = 'Niveau ' + (state.level + 1) + ' · ' + L.name;
+    lvlDesc.textContent = L.desc + ' (' + L.ex + ')';
   }
   LEVELS.forEach(function (L, i) {
     var b = document.createElement('button');
@@ -481,21 +474,35 @@ h2 {
     Array.prototype.forEach.call(npbEl.children, function (b, i) {
       b.setAttribute('aria-pressed', SPEEDS[i].n === state.npb ? 'true' : 'false');
     });
-    $('npbCap').textContent = SPEEDS[state.npb - 1].cap;
   }
   SPEEDS.forEach(function (S) {
     var b = document.createElement('button');
     b.type = 'button';
     b.textContent = String(S.n);
     b.setAttribute('aria-label', S.n + ' par temps, ' + S.cap);
+    b.title = S.cap;
     b.addEventListener('click', function () { state.npb = S.n; save(); renderSpeed(); newExercise(); });
     npbEl.appendChild(b);
   });
 
+  var smallerBtn = $('smaller'), biggerBtn = $('bigger');
+  function renderSize() {
+    var i = SCALES.indexOf(state.scale);
+    smallerBtn.disabled = i <= 0;
+    biggerBtn.disabled = i >= SCALES.length - 1;
+  }
+  function stepSize(d) {
+    var i = clamp(SCALES.indexOf(state.scale) + d, 0, SCALES.length - 1);
+    state.scale = SCALES[i];
+    save(); renderSize(); drawExercise();
+  }
+  smallerBtn.addEventListener('click', function () { stepSize(-1); });
+  biggerBtn.addEventListener('click', function () { stepSize(1); });
+
   /* ---------- Métronome ---------- */
   var M = { ctx: null, running: false, next: 0, timer: null, queue: [] };
   var playBtn = $('play'), bpmOut = $('bpmOut'), bpmRange = $('bpmRange'), markEl = $('mark');
-  var dot = $('beats').firstElementChild, dotT = null;
+  var flashT = null, keepAlive = null;
 
   function tempoMark(b) {
     return b < 60 ? 'Largo' : b < 76 ? 'Adagio' : b < 108 ? 'Andante' : b < 120 ? 'Moderato' :
@@ -509,10 +516,32 @@ h2 {
     save();
   }
   function flash() {
-    dot.classList.add('on');
-    clearTimeout(dotT);
-    dotT = setTimeout(function () { dot.classList.remove('on'); }, 100);
+    playBtn.classList.add('beat');
+    clearTimeout(flashT);
+    flashT = setTimeout(function () { playBtn.classList.remove('beat'); }, 90);
   }
+
+  /* iPhone : sans cela, le mode silencieux coupe le son de Web Audio. */
+  function unlockAudio() {
+    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+    try {
+      if (!keepAlive) {
+        var n = 8000, buf = new ArrayBuffer(44 + n), v = new DataView(buf), i;
+        var tag = function (o, t) { for (var j = 0; j < t.length; j++) v.setUint8(o + j, t.charCodeAt(j)); };
+        tag(0, 'RIFF'); v.setUint32(4, 36 + n, true); tag(8, 'WAVE'); tag(12, 'fmt ');
+        v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+        v.setUint32(24, 8000, true); v.setUint32(28, 8000, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true);
+        tag(36, 'data'); v.setUint32(40, n, true);
+        for (i = 0; i < n; i++) v.setUint8(44 + i, 128);
+        keepAlive = new Audio(URL.createObjectURL(new Blob([buf], { type: 'audio/wav' })));
+        keepAlive.loop = true;
+        keepAlive.setAttribute('playsinline', '');
+      }
+      var p = keepAlive.play();
+      if (p && p.catch) p.catch(function () {});
+    } catch (e) {}
+  }
+
   function click(time) {
     var ac = M.ctx;
     var o = ac.createOscillator(), g = ac.createGain();
@@ -540,26 +569,33 @@ h2 {
     requestAnimationFrame(frame);
   }
   function startMetro() {
+    unlockAudio();
     if (!M.ctx) {
       var AC = window.AudioContext || window.webkitAudioContext;
       if (!AC) return;
       M.ctx = new AC();
     }
-    if (M.ctx.state === 'suspended') M.ctx.resume();
     M.running = true;
     M.queue = [];
-    M.next = M.ctx.currentTime + 0.06;
-    schedule();
-    M.timer = setInterval(schedule, 25);
-    requestAnimationFrame(frame);
     playBtn.setAttribute('aria-pressed', 'true');
     playBtn.setAttribute('aria-label', 'Arrêter le métronome');
+    var begin = function () {
+      if (!M.running || M.timer) return;
+      M.next = M.ctx.currentTime + 0.06;
+      schedule();
+      M.timer = setInterval(schedule, 25);
+      requestAnimationFrame(frame);
+    };
+    var p = M.ctx.resume();
+    if (p && p.then) p.then(begin, begin); else begin();
   }
   function stopMetro() {
     M.running = false;
     clearInterval(M.timer);
+    M.timer = null;
     M.queue = [];
-    dot.classList.remove('on');
+    playBtn.classList.remove('beat');
+    if (keepAlive) keepAlive.pause();
     playBtn.setAttribute('aria-pressed', 'false');
     playBtn.setAttribute('aria-label', 'Lancer le métronome');
   }
@@ -608,19 +644,25 @@ h2 {
     else if (e.key === 'ArrowDown') { e.preventDefault(); setBpm(state.bpm - (e.shiftKey ? 5 : 1)); }
   });
 
-  var lastW = 0, rt = null;
-  function watchWidth() {
-    var w = Math.floor(staffEl.clientWidth);
-    if (w && w !== lastW) { lastW = w; clearTimeout(rt); rt = setTimeout(drawExercise, 80); }
+  var lastW = 0, lastH = 0, rt = null;
+  function watchSize() {
+    var w = Math.floor(staffEl.clientWidth), h = Math.floor(staffEl.clientHeight);
+    if ((w !== lastW || h !== lastH) && w && h) {
+      lastW = w; lastH = h;
+      clearTimeout(rt);
+      rt = setTimeout(drawExercise, 60);
+    }
   }
-  if (window.ResizeObserver) new ResizeObserver(watchWidth).observe(staffEl);
-  else window.addEventListener('resize', watchWidth);
+  if (window.ResizeObserver) new ResizeObserver(watchSize).observe(staffEl);
+  else window.addEventListener('resize', watchSize);
 
   setBpm(state.bpm);
   renderLevels();
   renderSpeed();
+  renderSize();
   newExercise();
   lastW = Math.floor(staffEl.clientWidth);
+  lastH = Math.floor(staffEl.clientHeight);
 
   window.LEM = { generate: generate, LEVELS: LEVELS };
 })();
