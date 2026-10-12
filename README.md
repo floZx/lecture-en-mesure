@@ -1,5 +1,7 @@
 # Lecture en mesure
 
+<p align="center"><img src="capture.png" alt="Capture de l'application" width="320"></p>
+
 Petite application web pour apprendre à lire les notes en clé de sol, avec un métronome intégré. Elle fonctionne sur téléphone comme sur ordinateur.
 
 La progression des 7 niveaux s'inspire du *Manuel pratique* de Georges Dandelot (Max Eschig, 1928) : on part de quatre points de repère (Do, Sol, Do, Sol), puis on ajoute les notes voisines, les tierces, les lignes supplémentaires et les octaves. Les exercices sont générés au hasard, ce ne sont pas ceux du livre.
