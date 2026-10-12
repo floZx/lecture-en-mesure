@@ -321,9 +321,10 @@ h1 {
   var STREAM = 600;   /* notes générées d'avance ; l'écran en affiche autant qu'il peut */
 
   function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
-  function weight(prev, cand, L, same) {
+  function weight(prev, cand, L, same, tight) {
     var dd = Math.abs(cand - prev);
     if (dd === 0) return same >= 1 ? 0 : 0.15;
+    if (tight && dd > 2) return 0;
     var w = dd === 1 ? 3 : dd === 2 ? 4 : dd === 3 ? 2 : dd === 4 ? 1.5 : dd === 7 ? (L.octave ? 7 : 0.8) : 0.7;
     if (L.ledger && (cand >= 40 || cand <= 28)) w *= 2;
     return w;
@@ -335,8 +336,11 @@ h1 {
       if (prev === null) {
         d = pool[Math.floor(Math.random() * pool.length)];
       } else {
-        var ws = [], tot = 0;
-        for (k = 0; k < pool.length; k++) { var w = weight(prev, pool[k], L, same); ws.push(w); tot += w; }
+        var ws = [], tot = 0, tight = npb > 1 && i % npb !== 0;
+        for (k = 0; k < pool.length; k++) { var w = weight(prev, pool[k], L, same, tight); ws.push(w); tot += w; }
+        if (!tot) {
+          for (k = 0; k < pool.length; k++) { ws[k] = weight(prev, pool[k], L, same, false); tot += ws[k]; }
+        }
         var r = Math.random() * tot;
         d = pool[pool.length - 1];
         for (k = 0; k < pool.length; k++) { r -= ws[k]; if (r < 0) { d = pool[k]; break; } }
@@ -366,8 +370,8 @@ h1 {
 
   /* ---------- Notation ---------- */
   var NS = 'http://www.w3.org/2000/svg';
-  var ROW_PLAIN = 112, ROW_NAMES = 136, CLEF_W = 46, PAD = 4;
-  var NOTE_W = { 1: 34, 2: 29, 3: 28, 4: 22 };
+  var ROW_PLAIN = 126, ROW_NAMES = 150, CLEF_W = 46, PAD = 4;
+  var NOTE_W = { 1: 34, 2: 30, 3: 30, 4: 26 };
 
   function drawExercise() {
     staffEl.innerHTML = '';
@@ -394,6 +398,8 @@ h1 {
     ctx.setStrokeStyle('currentColor');
     var svg = staffEl.querySelector('svg');
     svg.setAttribute('viewBox', '0 0 ' + Wn + ' ' + Hn);
+    svg.style.width = '100%';   /* VexFlow impose une taille en pixels : on la remplace pour que le dessin se mette à l'échelle */
+    svg.style.height = '100%';
     svg.setAttribute('role', 'img');
     svg.setAttribute('aria-label', 'Exercice de lecture de notes en clé de sol');
     var nameSize = clamp(11 / s, 12, 20);
@@ -401,27 +407,39 @@ h1 {
     for (var ri = 0; ri < rows; ri++) {
       var row = ex.notes.slice(ri * per, Math.min((ri + 1) * per, total));
       if (!row.length) break;
-      var y = ri * RH + (RH - rh0) / 2;
+      var y = ri * RH + (RH - rh0) / 2 + 8;
       var stave = new VF.Stave(PAD, y, Wn - 2 * PAD);
       stave.addClef('treble');
       if (ri === rows - 1 || (ri + 1) * per >= total) stave.setEndBarType(VF.Barline.type.END);
       stave.setContext(ctx).draw();
 
-      var notes = row.map(function (n) {
-        return new VF.StaveNote({
+      /* One stem direction per beamed group: down when the group sits above the middle line. */
+      var dirs = [];
+      if (npb > 1) {
+        for (var q = 0; q < row.length; q += npb) {
+          var sum = 0;
+          for (var u = 0; u < npb; u++) sum += row[q + u].deg;
+          dirs.push(sum / npb >= 34 ? -1 : 1);
+        }
+      }
+      var notes = row.map(function (n, idx) {
+        var o = {
           clef: 'treble',
           keys: [LETTERS[n.deg % 7] + '/' + Math.floor(n.deg / 7)],
-          duration: npb === 1 ? (n.rep ? 'h' : 'q') : npb === 4 ? '16' : '8',
-          auto_stem: true
-        });
+          duration: npb === 1 ? (n.rep ? 'h' : 'q') : npb === 4 ? '16' : '8'
+        };
+        if (npb === 1) o.auto_stem = true; else o.stem_direction = dirs[Math.floor(idx / npb)];
+        return new VF.StaveNote(o);
       });
 
       var beams = [], tuplets = [];
       if (npb > 1) {
         for (var g = 0; g + npb <= notes.length; g += npb) {
-          var grp = notes.slice(g, g + npb);
-          if (npb === 3) tuplets.push(new VF.Tuplet(grp, { num_notes: 3, notes_occupied: 2 }));
-          beams.push(new VF.Beam(grp));
+          var grp = notes.slice(g, g + npb), dir = dirs[g / npb];
+          if (npb === 3) tuplets.push(new VF.Tuplet(grp, { num_notes: 3, notes_occupied: 2, location: dir === 1 ? 1 : -1 }));
+          var bm = new VF.Beam(grp);
+          bm.render_options.flat_beams = true;
+          beams.push(bm);
         }
       }
       VF.Formatter.FormatAndDraw(ctx, stave, notes);
