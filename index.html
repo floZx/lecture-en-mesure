@@ -417,9 +417,12 @@ h1 {
       var dirs = [];
       if (npb > 1) {
         for (var q = 0; q < row.length; q += npb) {
-          var sum = 0;
-          for (var u = 0; u < npb; u++) sum += row[q + u].deg;
-          dirs.push(sum / npb >= 34 ? -1 : 1);
+          var far = 0;
+          for (var u = 0; u < npb; u++) {
+            var off = row[q + u].deg - 34;
+            if (Math.abs(off) > Math.abs(far)) far = off;
+          }
+          dirs.push(far >= 0 ? -1 : 1);
         }
       }
       var notes = row.map(function (n, idx) {
@@ -437,9 +440,7 @@ h1 {
         for (var g = 0; g + npb <= notes.length; g += npb) {
           var grp = notes.slice(g, g + npb), dir = dirs[g / npb];
           if (npb === 3) tuplets.push(new VF.Tuplet(grp, { num_notes: 3, notes_occupied: 2, location: dir === 1 ? 1 : -1 }));
-          var bm = new VF.Beam(grp);
-          bm.render_options.flat_beams = true;
-          beams.push(bm);
+          beams.push(new VF.Beam(grp));
         }
       }
       VF.Formatter.FormatAndDraw(ctx, stave, notes);
